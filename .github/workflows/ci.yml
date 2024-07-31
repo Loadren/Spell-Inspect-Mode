@@ -24,7 +24,7 @@ jobs:
     - name: Build and Package
       run: |
         mkdir -p ./output
-        ./BigWigsPackager/release.sh ./SpellInspectMode ./output
+        ./BigWigsPackager/release.sh . ./output
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
