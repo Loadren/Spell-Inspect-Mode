@@ -1,0 +1,13 @@
+## Interface: 110000
+## Title: |cFFFFA500Spell Inspect Mode|r
+## Notes: |cFF00FFFFBring the BG3 Inspect Mode to WoW!|r
+## Author: Loadren
+## Version: 0.0.1
+## SavedVariables: SpellInspectModeDB
+## IconTexture: 132860
+
+# Include the library
+libs/LibPlayerSpells-1.0/lib.xml
+libs/LibAsync/LibAsync.xml
+
+SpellInspectMode.lua

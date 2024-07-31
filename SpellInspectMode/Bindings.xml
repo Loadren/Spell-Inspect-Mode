@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name='SPELL_INSPECT_MODE_TOGGLE_INSPECT_MODE' category='Spell Inspect Mode' default="CTRL-T">
+        SpellInspectMode:ToggleInspectMode()
+    </Binding>
+</Bindings>
