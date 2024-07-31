@@ -24,14 +24,14 @@ jobs:
     - name: Build and Package
       run: |
         mkdir -p ./output
-        ./BigWigsPackager/release.sh . ./output
+        ./BigWigsPackager/release.sh ./ ./output
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: addon-package
-        path: ./output/SpellInspectMode
-    
+        path: ./output/SpellInspectMode.zip
+
     - name: Upload to CurseForge
       env:
         CF_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
