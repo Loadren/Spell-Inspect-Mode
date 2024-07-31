@@ -1,5 +1,4 @@
 local AddonName, SpellInspectMode = ...
-local handler = LibStub("LibAsync"):GetHandler()
 
 -- This ensures the table is globally accessible
 _G[AddonName] = SpellInspectMode
