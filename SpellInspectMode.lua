@@ -1,5 +1,4 @@
 local AddonName, SpellInspectMode = ...
-local LPS = LibStub("LibPlayerSpells-1.0")
 local handler = LibStub("LibAsync"):GetHandler()
 
 -- This ensures the table is globally accessible
@@ -34,27 +33,46 @@ overlayTexture:SetAllPoints(overlay)
 local function GetPlayerSpells()
     local spells = {}
 
-    local _, className = UnitClass("player")
-
-    -- Iterate over all spells and store the ones that are available to the player
-    for spellId, flags, _, modifiedSpells in LPS:IterateSpells(className, "", "") do
-        handler:Async(function()
-            local spellName = GetSpellInfo(spellId)
-            spells[spellName] = spellId
-
-            if type(modifiedSpells) == "number" then
-                local modifiedSpellName = GetSpellInfo(modifiedSpells)
-                spells[modifiedSpellName] = modifiedSpells
-            elseif type(modifiedSpells) == "table" then
-                for _, modifiedSpellId in ipairs(modifiedSpells) do
-                    local modifiedSpellName = GetSpellInfo(modifiedSpellId)
-                    spells[modifiedSpellName] = modifiedSpellId
-                end
+    for i = 2, C_SpellBook.GetNumSpellBookSkillLines() do
+        local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
+        local offset, numSlots = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems
+        for j = offset + 1, offset + numSlots do
+            local name = C_SpellBook.GetSpellBookItemName(j, Enum.SpellBookSpellBank.Player)
+            local spellID = select(2, C_SpellBook.GetSpellBookItemType(j, Enum.SpellBookSpellBank.Player))
+            if name and spellID then
+                spells[name] = spellID
             end
-        end, "ClassSpellLooper", false)
+        end
     end
 
     return spells
+end
+
+local function GetPlayerTalents()
+    local configID = C_ClassTalents.GetActiveConfigID()
+
+    local talents = {}
+
+    if(not configID) then
+        return {}
+    end
+    local configInfo = C_Traits.GetConfigInfo(configID)
+    local nodeIDs = C_Traits.GetTreeNodes(configInfo.treeIDs[1])
+    
+    for i, nodeID in ipairs(nodeIDs) do
+        local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)
+        for j, entryID in ipairs(nodeInfo.entryIDs) do
+            local entryInfo = C_Traits.GetEntryInfo(configID, entryID)
+            local definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID)
+            local talentID = definitionInfo.spellID
+            if talentID then
+                local talentName = GetSpellInfo(talentID)
+                talents[talentName] = talentID
+            end
+        end
+    end
+
+    return talents
 end
 
 -- Function to create a new custom tooltip
@@ -142,7 +160,7 @@ function SpellInspectMode:ActivateInspectMode(spellID)
 
             SpellInspectMode:ProcessTooltipData(newTooltip)
         end
-        
+
 
         if spell:IsSpellDataCached() then
             OnSpellDataLoaded()
@@ -195,6 +213,16 @@ function SpellInspectMode:ProcessTooltipData(tooltip)
                         leftTextLine:SetText(tooltipText)
                     end
                 end
+
+                for spellName, id in pairs(SpellInspectMode.talents) do
+                    local startIndex = string.find(tooltipText, spellName, 1, true)
+                    if startIndex then
+                        -- Create a clickable and highlighted link
+                        local link = "|cff67BCFF|Hspell:" .. id .. "|h" .. spellName .. "|h|r"
+                        tooltipText = string.gsub(tooltipText, spellName, link, 1)
+                        leftTextLine:SetText(tooltipText)
+                    end
+                end
             end
         end
     end
@@ -224,5 +252,6 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == AddonName then
         SpellInspectMode.spells = GetPlayerSpells()
+        SpellInspectMode.talents = GetPlayerTalents()
     end
 end)
