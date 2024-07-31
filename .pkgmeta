@@ -10,10 +10,4 @@ ignore:
   - node_modules
   - *.bat
   - *.sh
-externals:
-  libs/LibStub:
-    url: https://github.com/tekkub/libstub
-    tag: latest
-  libs/Ace3:
-    url: https://repos.wowace.com/wow/ace3
-    tag: latest
+  - logo.jpg
