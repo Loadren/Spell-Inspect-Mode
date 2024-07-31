@@ -1,0 +1,32 @@
+name: Build and Deploy Addon
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install CurseForge Packager
+      run: npm install -g @wow/addon-packager
+
+    - name: Build and Package
+      run: |
+        mkdir -p ./output
+        addon-packager --source ./SpellInspectMode --output ./output
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: addon-package
+        path: ./output
