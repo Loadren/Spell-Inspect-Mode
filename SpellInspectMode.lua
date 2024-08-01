@@ -7,9 +7,8 @@ _G[AddonName] = SpellInspectMode
 BINDING_HEADER_SPELL_INSPECT_MODE = "Spell Inspect Mode"
 BINDING_NAME_SPELL_INSPECT_MODE_TOGGLE_INSPECT_MODE = "Toggle Inspect Mode"
 
--- Initialize the lock state
+-- Initialize the Inspect Mode state
 local isInInspectMode = false
-local currentSpellID = nil
 
 -- Stack to keep track of opened tooltips
 local tooltipStack = {}
@@ -17,7 +16,7 @@ local tooltipStack = {}
 -- Last hovered spell ID
 local lastHoveredSpellID = nil
 
--- Create an overlay frame
+-- Create an overlay frame to obscure the game while in Inspect Mode
 local overlay = CreateFrame("Frame", "InspectModeOverlay", UIParent)
 overlay:SetFrameStrata("DIALOG") -- Ensure it is above the UI elements
 overlay:SetAllPoints(UIParent)
@@ -29,52 +28,64 @@ local overlayTexture = overlay:CreateTexture(nil, "BACKGROUND")
 overlayTexture:SetColorTexture(0, 0, 0, 0.6) -- Semi-transparent black
 overlayTexture:SetAllPoints(overlay)
 
-local function GetPlayerSpells()
-    local spells = {}
-
+-- Function to populate the player's spell table
+-- Iterates through the spellbook and stores spells and their attributes, checking for passive vs active
+local function PopulatePlayerSpells(table)
     for i = 2, C_SpellBook.GetNumSpellBookSkillLines() do
         local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
         local offset, numSlots = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems
         for j = offset + 1, offset + numSlots do
             local name = C_SpellBook.GetSpellBookItemName(j, Enum.SpellBookSpellBank.Player)
-            local spellID = select(2, C_SpellBook.GetSpellBookItemType(j, Enum.SpellBookSpellBank.Player))
-            if name and spellID then
-                spells[name] = spellID
+            local spellInfo = C_SpellBook.GetSpellBookItemInfo(j, Enum.SpellBookSpellBank.Player)
+            if name and spellInfo and spellInfo.actionID then
+                if table[name] and spellInfo.isPassive then
+                    -- Skip passive spells if an active spell with the same name exists
+                else
+                    table[name] = {
+                        spellID = spellInfo.actionID,
+                        isPassive = spellInfo.isPassive,
+                    }
+                end
             end
         end
     end
-
-    return spells
 end
 
-local function GetPlayerTalents()
+-- Function to populate the player's talent table
+-- Retrieves talents and stores their attributes, checking for passive vs active
+local function PopulatePlayerTalents(table)
     local configID = C_ClassTalents.GetActiveConfigID()
 
-    local talents = {}
-
-    if(not configID) then
+    if (not configID) then
         return {}
     end
     local configInfo = C_Traits.GetConfigInfo(configID)
     local nodeIDs = C_Traits.GetTreeNodes(configInfo.treeIDs[1])
-    
+
     for i, nodeID in ipairs(nodeIDs) do
         local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)
         for j, entryID in ipairs(nodeInfo.entryIDs) do
             local entryInfo = C_Traits.GetEntryInfo(configID, entryID)
             local definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID)
-            local talentID = definitionInfo.spellID
-            if talentID then
-                local talentName = GetSpellInfo(talentID)
-                talents[talentName] = talentID
+            local talentSpellID = definitionInfo.spellID
+            if talentSpellID then
+                local talentName = GetSpellInfo(talentSpellID)
+                local isPassive = C_Spell.IsSpellPassive(talentSpellID)
+                if table[talentName] and isPassive then
+                    -- Skip passive spells if an active spell with the same name exists
+                else
+                    table[talentName] = {
+                        spellID = talentSpellID,
+                        isPassive = isPassive,
+                    }
+                end
             end
         end
     end
-
-    return talents
 end
 
 -- Function to create a new custom tooltip
+-- Creates or reuses a tooltip for displaying spell information
 local function createCustomTooltip()
     local tooltipName = "InspectModeTooltip" .. (#tooltipStack + 1)
     if _G[tooltipName] then
@@ -101,6 +112,7 @@ local function createCustomTooltip()
 end
 
 -- Function to toggle inspect mode state
+-- Toggles between activating and deactivating inspect mode based on the current state and hovered spell
 function SpellInspectMode:ToggleInspectMode()
     local spellID
 
@@ -122,10 +134,10 @@ function SpellInspectMode:ToggleInspectMode()
 end
 
 -- Function to activate inspect mode for a specific spell ID
+-- Shows the overlay and positions the tooltip with the spell information
 function SpellInspectMode:ActivateInspectMode(spellID)
     if spellID then
         isInInspectMode = true
-        currentSpellID = spellID
 
         -- Show the overlay
         overlay:Show()
@@ -180,6 +192,7 @@ function SpellInspectMode:ActivateInspectMode(spellID)
 end
 
 -- Function to deactivate inspect mode or close the latest opened tooltip
+-- Hides the tooltip and overlay, and removes the last tooltip from the stack
 function SpellInspectMode:DeactivateInspectMode()
     if #tooltipStack > 0 then
         local tooltipData = table.remove(tooltipStack)
@@ -188,7 +201,6 @@ function SpellInspectMode:DeactivateInspectMode()
 
     if #tooltipStack == 0 then
         isInInspectMode = false
-        currentSpellID = nil
 
         -- Hide the overlay
         overlay:Hide()
@@ -196,6 +208,7 @@ function SpellInspectMode:DeactivateInspectMode()
 end
 
 -- Function to process tooltip data for custom tooltips like InspectModeTooltip
+-- Adds links and highlights for spells and talents within the tooltip text
 function SpellInspectMode:ProcessTooltipData(tooltip)
     local numLines = tooltip:NumLines()
     for i = 2, numLines do
@@ -203,22 +216,15 @@ function SpellInspectMode:ProcessTooltipData(tooltip)
         if leftTextLine then
             local tooltipText = leftTextLine:GetText()
             if tooltipText then
-                for spellName, id in pairs(SpellInspectMode.spells) do
-                    local startIndex = string.find(tooltipText, spellName, 1, true)
+                for name, info in pairs(SpellInspectMode.spells) do
+                    local startIndex = string.find(tooltipText, name, 1, true)
                     if startIndex then
-                        -- Create a clickable and highlighted link
-                        local link = "|cffffffcc|Hspell:" .. id .. "|h" .. spellName .. "|h|r"
-                        tooltipText = string.gsub(tooltipText, spellName, link, 1)
-                        leftTextLine:SetText(tooltipText)
-                    end
-                end
+                        -- Determine color based on passive or active
+                        local color = info.isPassive and "ff67BCFF" or "ffffffcc"
 
-                for spellName, id in pairs(SpellInspectMode.talents) do
-                    local startIndex = string.find(tooltipText, spellName, 1, true)
-                    if startIndex then
-                        -- Create a clickable and highlighted link
-                        local link = "|cff67BCFF|Hspell:" .. id .. "|h" .. spellName .. "|h|r"
-                        tooltipText = string.gsub(tooltipText, spellName, link, 1)
+                        -- Create a highlighted link
+                        local link = "|c" .. color .. "|Hspell:" .. info.spellID .. "|h" .. name .. "|h|r"
+                        tooltipText = string.gsub(tooltipText, name, link, 1)
                         leftTextLine:SetText(tooltipText)
                     end
                 end
@@ -228,18 +234,17 @@ function SpellInspectMode:ProcessTooltipData(tooltip)
 end
 
 -- Register the function for the spell tooltip data type
+-- Ensures tooltips are processed when displaying spell data
 TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(tooltip)
     if tooltip:GetName() == "GameTooltip" then
         SpellInspectMode:ProcessTooltipData(tooltip)
     end
 end)
 
--- Override the default UI behavior when the Escape key is pressed
+-- Exits Inspect Mode when Escape is pressed
 hooksecurefunc("StaticPopup_EscapePressed", function()
     while isInInspectMode do
         SpellInspectMode:DeactivateInspectMode()
-        -- Prevent the default behavior (opening the game menu)
-        StaticPopup_Hide("ESCAPE")
     end
 end)
 
@@ -250,9 +255,9 @@ eventFrame:RegisterEvent("SPELLS_CHANGED")
 -- Event handler function
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "SPELLS_CHANGED" then
-        -- print("Updating spells and talents...")
         -- Initialize or update the spell and talent data
-        SpellInspectMode.spells = GetPlayerSpells()
-        SpellInspectMode.talents = GetPlayerTalents()
+        SpellInspectMode.spells = {};
+        PopulatePlayerSpells(SpellInspectMode.spells)
+        PopulatePlayerTalents(SpellInspectMode.spells)
     end
 end)

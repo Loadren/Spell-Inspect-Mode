@@ -1,12 +1,16 @@
 name: Build and Deploy Addon
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
     paths-ignore:
       - 'README.md'
       - '.github/workflows/ci.yml'
+      - 'logo.jpg'
 
 jobs:
   build:

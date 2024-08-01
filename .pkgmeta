@@ -11,3 +11,5 @@ ignore:
   - *.bat
   - *.sh
   - logo.jpg
+  - LICENSE
+  - CHANGELOG.md
