@@ -243,13 +243,15 @@ hooksecurefunc("StaticPopup_EscapePressed", function()
     end
 end)
 
--- Event frame to handle initialization
+-- Event frame to handle initialization and updates
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("SPELLS_CHANGED")
 
 -- Event handler function
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == AddonName then
+    if event == "SPELLS_CHANGED" then
+        -- print("Updating spells and talents...")
+        -- Initialize or update the spell and talent data
         SpellInspectMode.spells = GetPlayerSpells()
         SpellInspectMode.talents = GetPlayerTalents()
     end
