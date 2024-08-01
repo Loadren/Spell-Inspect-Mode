@@ -162,10 +162,12 @@ function SpellInspectMode:ActivateInspectMode(spellID)
                 local tooltipTextureInfo = {
                     width = 32,
                     height = 32,
-                    anchor = Enum.TooltipTextureAnchor.LeftTop,
+                    anchor = Enum.TooltipTextureAnchor.LeftBottom,
                     margin = { left = 0, right = 8, top = 0, bottom = 0 },
                     region = Enum.TooltipTextureRelativeRegion.LeftLine,
                 }
+                -- I'd love to add texture at the top left of the tooltip, but it adds the texture at the last "AddLine" position.
+                -- So, I'm adding it at the bottom left of the tooltip.
                 newTooltip:AddTexture(spellIcon, tooltipTextureInfo)
             end
 
