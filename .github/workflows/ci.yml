@@ -13,7 +13,31 @@ on:
       - 'logo.jpg'
 
 jobs:
+  check_version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Check Version
+      run: |
+        current_version=$(grep -Po '## Version:\s*\K.*' SpellInspectMode.toc)
+        previous_version=$(cat previous_version.txt)
+        echo "Current version: $current_version"
+        echo "Previous version: $previous_version"
+        if [ "$current_version" = "$previous_version" ]; then
+          echo "Error: Version in .toc file has not been updated."
+          exit 1
+        else
+          echo "Version updated successfully."
+        fi
+
+    - name: Update Previous Version
+      if: github.event.pull_request.merged == true
+      run: echo $current_version > previous_version.txt
   build:
+    needs: check_version
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -33,13 +57,13 @@ jobs:
         mkdir -p ./output
         ./BigWigsPackager/release.sh ./ ./output
         zip_file=$(basename ./.release/*.zip)
-        mv ./.release/$zip_file ./output/
+        mv ./.release/$zip_file ./output/SpellInspectMode-$current_version.zip
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: addon-package
-        path: ./output/$zip_file
+        path: ./output/SpellInspectMode-$current_version.zip
 
     - name: Upload to CurseForge
       env:
