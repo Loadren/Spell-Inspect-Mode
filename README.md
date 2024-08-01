@@ -14,8 +14,8 @@ CurseForge: ([https://www.curseforge.com/wow/addons/spell-inspect-mode](https://
 
 - **Inspect Mode Activation**: Instantly view detailed spell information by hovering over a spell or its hyperlink and pressing a designated keybind (You must define it in `Options/Keybindings/Spell Inspect Mode`). This feature is similar to Baldur's Gate 3's Inspect Mode.
 - **Color Differentiation**: Easily distinguish between Talents and basic spells with color-coded highlights:
-  - Talents are displayed in a light blue color.
-  - Basic spells are shown in heirloom color, matching the in-game item rarity color scheme
+  - Passives spells (and talents) are displayed in a light blue color.
+  - Active spells (and talents) are shown in a light yellow color.
 - **Layered Tooltips**: Open multiple tooltips in sequence, each providing deeper information about linked spells and talents. Simply press the keybind again to view additional tooltips on top of the current one.
 - **Exit Mechanism**: Easily exit Inspect Mode by pressing Escape or by using the keybind while not hovering over a spell, stepping back through the stack of opened tooltips.
 
