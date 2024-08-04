@@ -1,6 +1,10 @@
 name: Build and Deploy Addon
 
 on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
   push:
     branches:
       - main
@@ -10,11 +14,21 @@ on:
 
 jobs:
   check_version:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Check if Merge
+      id: check_if_merge
+      run: |
+        if [[ $GITHUB_EVENT_NAME == 'pull_request' && $GITHUB_EVENT_ACTION == 'closed' && $GITHUB_EVENT_PULL_REQUEST_MERGED == 'true' ]]; then
+          echo "This is a merged pull request"
+          echo "::set-output name=merged::true"
+        else
+          echo "This is not a merged pull request"
+          echo "::set-output name=merged::false"
+        fi
 
     - name: Check Version
       run: |
@@ -30,8 +44,9 @@ jobs:
         fi
 
     - name: Update Previous Version
-      if: github.event.pull_request.merged == true
+      if: steps.check_if_merge.outputs.merged == 'true'
       run: echo $current_version > previous_version.txt
+      
   build:
     needs: check_version
     runs-on: ubuntu-latest
