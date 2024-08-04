@@ -10,6 +10,7 @@ on:
       - main
     paths-ignore:
       - 'README.md'
+      - '.github/workflows/ci.yml'
       - 'logo.jpg'
 
 jobs:
@@ -18,12 +19,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Initialize Previous Version
-      run: |
-        if [ ! -f previous_version.txt ]; then
-          echo "0.0.0" > previous_version.txt
-        fi
+      with:
+        fetch-depth: 2  # Fetch enough history to compare with the last commit
 
     - name: Check if Merge
       id: check_if_merge
@@ -36,10 +33,14 @@ jobs:
           echo "merged=false" >> $GITHUB_ENV
         fi
 
+    - name: Get Previous Version
+      run: |
+        previous_version=$(git show HEAD~1:SpellInspectMode.toc | grep -Po '## Version:\s*\K.*')
+        echo "previous_version=$previous_version" >> $GITHUB_ENV
+
     - name: Check Version
       run: |
         current_version=$(grep -Po '## Version:\s*\K.*' SpellInspectMode.toc)
-        previous_version=$(cat previous_version.txt)
         echo "Current version: $current_version"
         echo "Previous version: $previous_version"
         if [ "$current_version" = "$previous_version" ]; then
@@ -48,10 +49,6 @@ jobs:
         else
           echo "Version updated successfully."
         fi
-
-    - name: Update Previous Version
-      if: steps.check_if_merge.outputs.merged == 'true'
-      run: echo $current_version > previous_version.txt
       
   build:
     needs: check_version
