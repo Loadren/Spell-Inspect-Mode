@@ -10,7 +10,6 @@ on:
       - main
     paths-ignore:
       - 'README.md'
-      - '.github/workflows/ci.yml'
       - 'logo.jpg'
 
 jobs:
@@ -29,12 +28,12 @@ jobs:
     - name: Check if Merge
       id: check_if_merge
       run: |
-        if [[ $GITHUB_EVENT_NAME == 'pull_request' && $GITHUB_EVENT_ACTION == 'closed' && $GITHUB_EVENT_PULL_REQUEST_MERGED == 'true' ]]; then
+        if [[ "$GITHUB_EVENT_NAME" == 'pull_request' && "$GITHUB_EVENT_ACTION" == 'closed' && "$(jq -r '.pull_request.merged' "$GITHUB_EVENT_PATH")" == 'true' ]]; then
           echo "This is a merged pull request"
-          echo "::set-output name=merged::true"
+          echo "merged=true" >> $GITHUB_ENV
         else
           echo "This is not a merged pull request"
-          echo "::set-output name=merged::false"
+          echo "merged=false" >> $GITHUB_ENV
         fi
 
     - name: Check Version
