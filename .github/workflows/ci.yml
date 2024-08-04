@@ -20,6 +20,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Initialize Previous Version
+      run: |
+        if [ ! -f previous_version.txt ]; then
+          echo "0.0.0" > previous_version.txt
+        fi
+
     - name: Check if Merge
       id: check_if_merge
       run: |
