@@ -10,7 +10,6 @@ on:
       - main
     paths-ignore:
       - 'README.md'
-      - '.github/workflows/ci.yml'
       - 'logo.jpg'
 
 jobs:
@@ -69,6 +68,8 @@ jobs:
     - name: Build and Package
       run: |
         mkdir -p ./output
+        current_version=$(grep -Po '## Version:\s*\K.*' SpellInspectMode.toc)
+        echo "current_version=$current_version" >> $GITHUB_ENV
         ./BigWigsPackager/release.sh ./ ./output
         zip_file=$(basename ./.release/*.zip)
         mv ./.release/$zip_file ./output/SpellInspectMode-$current_version.zip
@@ -77,7 +78,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: addon-package
-        path: ./output/SpellInspectMode-$current_version.zip
+        path: ./output/SpellInspectMode-${{ env.current_version }}.zip
 
     - name: Upload to CurseForge
       env:
