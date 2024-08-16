@@ -1,4 +1,6 @@
 package-as: SpellInspectMode
+move-folders:
+  src/: .
 ignore:
   - .git
   - .github
