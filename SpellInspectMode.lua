@@ -25,7 +25,7 @@ local function createOverlay()
     local overlay = CreateFrame("Frame", "InspectModeOverlay", UIParent)
     overlay:SetFrameStrata("DIALOG") -- Ensure it is above the UI elements
     overlay:SetAllPoints(UIParent)
-    overlay:EnableMouse(true)        -- to get mouse events
+    overlay:EnableMouse(true) 
     overlay:Hide()
 
     -- Add a semi-transparent black texture to the overlay
