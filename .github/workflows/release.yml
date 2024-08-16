@@ -49,6 +49,7 @@ jobs:
         fi
       
   release:
+    needs: check_version
     runs-on: ubuntu-latest
     env:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
