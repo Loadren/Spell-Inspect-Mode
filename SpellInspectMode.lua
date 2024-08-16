@@ -213,7 +213,7 @@ function SpellInspectMode:ActivateInspectMode(spellID)
             newTooltip:SetSpellByID(spellID)
 
             -- Fetch the spell icon
-            local spellIcon = GetSpellTexture(spellID)
+            local spellIcon = C_Spell.GetSpellTexture(spellID)
             if spellIcon then
                 local tooltipTextureInfo = {
                     width = 32,
