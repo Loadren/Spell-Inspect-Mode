@@ -1,52 +1,9 @@
 name: Build and Deploy Addon
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
   push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
-      - '.github/workflows/ci.yml'
-      - 'logo.jpg'
-
-jobs:
-  check_version:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 2  # Fetch enough history to compare with the last commit
-
-    - name: Check if Merge
-      id: check_if_merge
-      run: |
-        if [[ "$GITHUB_EVENT_NAME" == 'pull_request' && "$GITHUB_EVENT_ACTION" == 'closed' && "$(jq -r '.pull_request.merged' "$GITHUB_EVENT_PATH")" == 'true' ]]; then
-          echo "This is a merged pull request"
-          echo "merged=true" >> $GITHUB_ENV
-        else
-          echo "This is not a merged pull request"
-          echo "merged=false" >> $GITHUB_ENV
-        fi
-    - name: Get Previous Version
-      run: |
-        previous_version=$(git show HEAD~1:SpellInspectMode.toc | grep -Po '## Version:\s*\K.*')
-        echo "previous_version=$previous_version" >> $GITHUB_ENV
-    - name: Check Version
-      run: |
-        current_version=$(grep -Po '## Version:\s*\K.*' SpellInspectMode.toc)
-        echo "Current version: $current_version"
-        echo "Previous version: $previous_version"
-        if [ "$current_version" = "$previous_version" ]; then
-          echo "Error: Version in .toc file has not been updated."
-          exit 1
-        else
-          echo "Version updated successfully."
-        fi
+    tags:
+      - '**'
       
   release:
     needs: check_version
