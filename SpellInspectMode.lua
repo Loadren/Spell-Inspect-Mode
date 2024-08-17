@@ -111,7 +111,7 @@ local function PopulatePlayerTalents(spellTable, lookupTable)
             local talentSpellID = definitionInfo.spellID
             if talentSpellID then
                 local talentName = C_Spell.GetSpellInfo(talentSpellID).name -- GetSpellInfo without C_Spell is deprecated
-                local isPassive = C_Spell.IsSpellPassive(talentSpellID)
+                local isPassive = C_Spell.IsSpellPassive(talentSpellID) -- GetSpellInfo without C_Spell is deprecated
                 if spellTable[talentName] and isPassive then
                     -- Skip passive spells if an active spell with the same name exists
                 else

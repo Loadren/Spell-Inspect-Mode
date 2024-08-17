@@ -32,4 +32,3 @@ CurseForge: ([https://www.curseforge.com/wow/addons/spell-inspect-mode](https://
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your changes. If you encounter any bugs or have feature requests, feel free to open an issue on GitHub.
-Here's the updated section of your README with the added details about differentiating Talents from basic spells using colors:

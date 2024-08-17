@@ -4,6 +4,7 @@
 ## Author: Loadren
 ## Version: 1.1.3
 ## SavedVariables: SpellInspectModeDB
+## X-Curse-Project-ID: 1074689
 ## IconTexture: 132860
 
 SpellInspectMode.lua
